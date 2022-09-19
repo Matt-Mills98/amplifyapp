@@ -9,7 +9,7 @@ import { getTodo, listTodos } from './graphql/queries';
 const initialFormState = { name: '', description: '' }
 
 function App({ signOut }) {
-  const [notes, setNotes] = useState([]);
+  const [Todos, setTodos] = useState([]);
   const [formData, setFormData] = useState(initialFormState);
 
   async function onChange(e) {
@@ -17,69 +17,69 @@ function App({ signOut }) {
     const file = e.target.files[0];
     setFormData({ ...formData, image: file.name });
     await Storage.put(file.name, file);
-    fetchNotes();
+    fetchTodos();
   }
 
   useEffect(() => {
-    fetchNotes();
+    fetchTodos();
   }, []);
 
-  async function fetchNotes() {
+  async function fetchTodos() {
     const apiData = await API.graphql({ query: listTodos });
-    const notesFromAPI = apiData.data.listTodos.items;
-    await Promise.all(notesFromAPI.map(async note => {
-      if (note.image) {
-        const image = await Storage.get(note.image);
-        note.image = image;
+    const TodosFromAPI = apiData.data.listTodos.items;
+    await Promise.all(TodosFromAPI.map(async Todo => {
+      if (Todo.image) {
+        const image = await Storage.get(Todo.image);
+        Todo.image = image;
       }
-      return note;
+      return Todo;
     }))
-    setNotes(apiData.data.listNotes.items);
+    setTodos(apiData.data.listTodos.items);
   }
 
-  async function createNote() {
+  async function createTodo() {
     if (!formData.name || !formData.description) return;
     await API.graphql({ query: createTodoMutation, variables: { input: formData } });
     if (formData.image) {
       const image = await Storage.get(formData.image);
       formData.image = image;
     }
-    setNotes([...notes, formData]);
+    setTodos([...Todos, formData]);
     setFormData(initialFormState);
   }
 
-  async function deleteNote({ id }) {
-    const newNotesArray = notes.filter(note => note.id !== id);
-    setNotes(newNotesArray);
+  async function deleteTodo({ id }) {
+    const newTodosArray = Todos.filter(Todo => Todo.id !== id);
+    setTodos(newTodosArray);
     await API.graphql({ query: deleteTodoMutation, variables: { input: { id } } });
   }
   return (
     <div className="App">
-      <h1>My Notes App</h1>
+      <h1>My Todos App</h1>
       <input
         onChange={e => setFormData({ ...formData, 'name': e.target.value })}
-        placeholder="Note name"
+        placeholder="Todo name"
         value={formData.name}
       />
       <input
         onChange={e => setFormData({ ...formData, 'description': e.target.value })}
-        placeholder="Note description"
+        placeholder="Todo description"
         value={formData.description}
       />
       <input
         type="file"
         onChange={onChange}
       />
-      <button onClick={createNote}>Create Note</button>
+      <button onClick={createTodo}>Create Todo</button>
       <div style={{ marginBottom: 30 }}>
         {
-          notes.map(note => (
-            <div key={note.id || note.name}>
-              <h2>{note.name}</h2>
-              <p>{note.description}</p>
-              <button onClick={() => deleteNote(note)}>Delete note</button>
+          Todos.map(Todo => (
+            <div key={Todo.id || Todo.name}>
+              <h2>{Todo.name}</h2>
+              <p>{Todo.description}</p>
+              <button onClick={() => deleteTodo(Todo)}>Delete Todo</button>
               {
-                note.image && <img src={note.image} style={{ width: 400 }} />
+                Todo.image && <img src={Todo.image} style={{ width: 400 }} />
               }
             </div>
           ))
