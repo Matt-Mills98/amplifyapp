@@ -26,7 +26,7 @@ function App({ signOut }) {
 
   async function fetchNotes() {
     const apiData = await API.graphql({ query: listTodos });
-    const notesFromAPI = apiData.data.listNotes.items;
+    const notesFromAPI = apiData.data.listTodos.items;
     await Promise.all(notesFromAPI.map(async note => {
       if (note.image) {
         const image = await Storage.get(note.image);
